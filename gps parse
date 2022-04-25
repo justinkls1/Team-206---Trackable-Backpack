@@ -1,0 +1,63 @@
+#include <stdio.h>
+#include <string.h>
+
+int main ()
+{
+  char str[] ="$GNRMC,064951.000,A,2307.1256,N,12016.4438,E,0.03,165.48,260406,3.05,W,A*2C";
+  char *p;
+  
+  printf ("Split \"%s\" in tokens:\n", str);
+  
+  p = strtok (str,",");
+  
+    printf ("%s\n", p);
+    char *gpsadd = p;
+    p = strtok (NULL, ",");
+  
+    printf ("%s\n", p);
+    char *gpstime = p;
+    p = strtok (NULL,",");
+    
+    printf ("%s\n", p);
+    char *status = p;
+    p = strtok (NULL, ",");
+    
+    printf ("%s\n", p);
+    char *lat = p;
+    p = strtok (NULL, ",");
+    
+    printf ("%s\n", p);
+    char *nsdirection = p;
+    p = strtok (NULL, ",");
+    
+    printf ("%s\n", p);
+    char *longitude = p;
+    p = strtok (NULL, ",");
+    
+    printf ("%s\n", p);
+    char *ewdirection = p;
+    p = strtok (NULL, ",");
+    
+    printf ("%s\n", p);
+    p = strtok (NULL, ",");
+    
+    printf ("%s\n", p);
+    p = strtok (NULL, ",");
+    
+    printf ("%s\n", p);
+    p = strtok (NULL, ",");
+    
+    printf ("%s\n", p);
+    p = strtok (NULL, ",");
+    
+    printf ("%s\n", p);
+    p = strtok (NULL, ",");
+    
+    printf ("%s\n", p);
+    p = strtok (NULL, ",");
+    
+    printf ("latitude: %s %s\r\n", lat, nsdirection);
+    printf ("longitude: %s %s\r\n", longitude, ewdirection);
+  
+  return 0;
+}
