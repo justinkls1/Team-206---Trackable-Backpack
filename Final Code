@@ -151,17 +151,58 @@ void main(void)
         U2RXB = 0;  
         U2TXB = 0;
 
-        lon = strtok(GPS_Data, ",.\0");
-        lon = strtok(NULL," ,.\0");
-        strtok(NULL," ,.\0");               
-        strtok(NULL," ,.\0");               
-        lat = strtok(NULL," ,.\0");         
-        __delay_ms(10);
-
-        sprintf(str, "%sN %sW", lon, lat);  
-        printf(str);                        
-        printf("\r\n");           
+        char *p;
         
+         p = strtok (GPS_Data,",");
+  
+        printf ("%s\n", p);
+        char *gpsadd = p;
+        p = strtok (NULL, ",");
+  
+        printf ("%s\n", p);
+    char *gpstime = p;
+    p = strtok (NULL,",");
+    
+    printf ("%s\n", p);
+    char *status = p;
+    p = strtok (NULL, ",");
+    
+    printf ("%s\n", p);
+    char *lat = p;
+    p = strtok (NULL, ",");
+    
+    printf ("%s\n", p);
+    char *nsdirection = p;
+    p = strtok (NULL, ",");
+    
+    printf ("%s\n", p);
+    char *longitude = p;
+    p = strtok (NULL, ",");
+    
+    printf ("%s\n", p);
+    char *ewdirection = p;
+    p = strtok (NULL, ",");
+    
+    printf ("%s\n", p);
+    p = strtok (NULL, ",");
+    
+    printf ("%s\n", p);
+    p = strtok (NULL, ",");
+    
+    printf ("%s\n", p);
+    p = strtok (NULL, ",");
+    
+    printf ("%s\n", p);
+    p = strtok (NULL, ",");
+    
+    printf ("%s\n", p);
+    p = strtok (NULL, ",");
+    
+    printf ("%s\n", p);
+    p = strtok (NULL, ",");
+    
+    printf ("latitude: %s %s\r\n", lat, nsdirection);
+    printf ("longitude: %s %s\r\n", longitude, ewdirection);
         GPS_f = 0;
     }
 }
