@@ -14,7 +14,7 @@
     This header file provides implementations for driver APIs for all modules selected in the GUI.
     Generation Information :
         Product Revision  :  PIC10 / PIC12 / PIC16 / PIC18 MCUs - 1.81.7
-        Device            :  PIC18F47Q10
+        Device            :  PIC18F05Q40
         Driver Version    :  2.00
 */
 
@@ -42,54 +42,154 @@
 */
 
 #include "mcc_generated_files/mcc.h"
-uint8_t data2;
-uint8_t data1;
+#include <string.h>
+#include "stdlib.h"
+#define U2_EN()         (U2CON0 = 0xB0)
+#define U2_DIS()        (U2CON0 = 0x80)
+#define GPS_Start()     do { LATAbits.LATA2 = 1; } while(0)
+#define GPS_Stop()      do { LATAbits.LATA2 = 0; } while(0)
 
-void UART1_ISR(){
+volatile int GPS_f;
+
+uint8_t r1data = 0;
+char my_char[200] = "";
+char rxbuffer[200] = "";
+char GPS_Data[200] = "";
+char *GLL = "$PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n";
+char * lon;
+char * lat;
+char str[200] = "";
+
+void UART1_ISR (void){
     UART1_Receive_ISR();
     
-    if(UART1_is_rx_ready()){
-        data1=UART1_Read();
-        while(1){
-                if(UART1_is_tx_ready()){
-        UART1_Write(data1);
+    if (UART1_is_rx_ready()){
+        r1data = UART1_Read();
+        
 
-        while(!UART1_is_tx_done()){}
-        //LED_0_Toggle();
-        
-        
-        break;
-                }
-        }
     }
+    
 }
+
+void UART2_ISR(void){
+    UART2_Receive_ISR();    
+    GPS_f = 1;
+}
+
+void GPS_Read(void)
+{
+    while (UART2_Read() != 0x24);
+    while(!UART2_DataReady);
+    for (int i=0; i<=50; i++)   
+    {
+        GPS_Data[i] = UART2_Read();
+    }
+    U2_DIS();
+}
+    
+
 void main(void)
 {
-    
-    //LED_0_SetHigh();// Initialize the device
+    // Initialize the device
     SYSTEM_Initialize();
+    SPI1_Initialize();
+    SPI1_Open(SPI1_DEFAULT);
+    UART1_Initialize();
+    UART2_Initialize();
+    ADCC_Initialize();
+    ADCC_DisableContinuousConversion();
+    
+    adc_result_t tempVoltage;
+    uint16_t dutycycle;
+    GPS_Start();
+    
+    for (int i=0; i<=60; i++){
+        UART2_Write(GLL[i]);
+    }
     
     UART1_SetRxInterruptHandler(UART1_ISR);
-    //LED_0_SetHigh();
-    // If using interrupts in PIC18 High/Low Priority Mode you need to enable the Global High and Low Interrupts
-    // If using interrupts in PIC Mid-Range Compatibility Mode you need to enable the Global and Peripheral Interrupts
-    // Use the following macros to:
+    UART2_SetRxInterruptHandler(UART2_ISR);
+    U2_DIS();
+    GPS_f = 0;
     
+
+    // If using interrupts in PIC18 High/Low Priority Mode you need to enable the Global High and Low Interrupts
+    // If using interrupts in PIC Mid-Range Compatibility Mode you need to enable the Global Interrupts
+    // Use the following macros to:
+
     // Enable the Global Interrupts
     INTERRUPT_GlobalInterruptEnable();
 
+    
+    
     // Disable the Global Interrupts
     //INTERRUPT_GlobalInterruptDisable();
 
-    // Enable the Peripheral Interrupts
-    //INTERRUPT_PeripheralInterruptEnable();
-    //LED_0_SetHigh(); used as debugging led to ensure pin is working
-      if (UART1_Read() == '1')
-        {
-            LED_0_Toggle();
-        }
-//    // Disable the Peripheral Interrupts
-    //INTERRUPT_PeripheralInterruptDisable(); commented out interrupt bc not available
+    while (1)
+    {
+    U2_EN();
+    
+    tempVoltage = ADCC_GetSingleConversion(channel_ANA2);
+    float x = (float)tempVoltage*3.3/1023;
+    x = x * 4;
+    printf("Temperature: %f C\r\n", x);
+    
+    if (GPS_f == 1){
+        
+        GPS_Read();     
 
+        U2RXB = 0;  
+        U2TXB = 0;
+
+    char *p;
+    p = strtok (GPS_Data,",");
+  
+    char *gpsadd = p;
+    p = strtok (NULL, ",");
+    char *gpstime = p;
+    p = strtok (NULL,",");
+    char *status = p;
+    p = strtok (NULL, ",");
+    char *lat = p;
+    p = strtok (NULL, ",");
+    char *nsdirection = p;
+    p = strtok (NULL, ",");
+    char *longitude = p;
+    p = strtok (NULL, ",");
+    char *ewdirection = p;
+    p = strtok (NULL, ",");
+    p = strtok (NULL, ",");
+    p = strtok (NULL, ",");
+    p = strtok (NULL, ",");
+    p = strtok (NULL, ",");
+    p = strtok (NULL, ",");
+    p = strtok (NULL, ",");
+    
+    printf ("latitude: %s %s\n", lat, nsdirection);
+    printf ("longitude: %s %s\r\n", longitude, ewdirection);
+        
+    GPS_f = 0;
+      
+
+    if (x > 24){
+            RCLK_SetLow();
+        __delay_ms(0.05);
+        SPI1_WriteByte(0);
+        __delay_ms(0.05);
+        RCLK_SetHigh();
+        __delay_ms(1000);
+            RCLK_SetLow();
+        __delay_ms(0.05);
+        SPI1_WriteByte(255);
+        __delay_ms(0.05);
+        RCLK_SetHigh();
+        __delay_ms(1000);
+    }
+        
+    }
+}
 }
 
+/**
+ End of File
+*/
